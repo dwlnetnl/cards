@@ -26,8 +26,8 @@ func (h Hand) perfectPair() PerfectPair {
 	return Mixed
 }
 
-func (g *game) perfectPair(io IO) {
-	amount := io.PerfectPairBet(g.fortune)
+func (g *game) perfectPair() {
+	amount := g.inout.PerfectPairBet(g.fortune)
 	if amount.Equal(decimal.Zero) {
 		return
 	}
@@ -53,7 +53,7 @@ func (g *game) perfectPair(io IO) {
 			factor := decimal.New(int64(factor), 0)
 			amount = amount.Mul(factor)
 			g.fortune.Deposit(amount)
-			io.PerfectPair(pp, amount)
+			g.inout.PerfectPair(pp, amount)
 		}
 	}
 }

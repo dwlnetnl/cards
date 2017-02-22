@@ -57,6 +57,7 @@ type bet struct {
 }
 
 type game struct {
+	inout    IO
 	rules    Rules
 	fortune  *player.Fortune
 	shuffler *card.Shuffler
@@ -69,22 +70,22 @@ var newShuffler = card.NewShuffler // for testing
 // Play plays a blackjack game.
 func Play(io IO, r Rules, f *player.Fortune) {
 	s := newShuffler(card.NewStandardDeck(), r.NumDecks())
-	g := &game{rules: r, fortune: f, shuffler: s}
+	g := &game{inout: io, rules: r, fortune: f, shuffler: s}
 
 	for {
 		amount := io.Bet(g.fortune)
 		if amount.Cmp(decimal.Zero) == 1 { // amount > 0
 			g.fortune.Withdrawal(amount)
-			g.setup(io, amount)
+			g.setup(amount)
 
 			if g.rules.PerfectPair() {
-				g.perfectPair(io)
+				g.perfectPair()
 			}
 
 			if g.dealer.IsBlackjack() {
 				io.Outcome(DealerBlackjack, g.bets[0].amount, g.dealer, g.bets[0].hand)
 			} else {
-				g.play(io)
+				g.play()
 			}
 
 			g.cleanup()
@@ -96,7 +97,7 @@ func Play(io IO, r Rules, f *player.Fortune) {
 	}
 }
 
-func (g *game) setup(io IO, amount decimal.Decimal) {
+func (g *game) setup(amount decimal.Decimal) {
 	g.dealer = Hand{g.shuffler.MustDraw()}
 	if !g.rules.NoHoleCard() {
 		g.dealer = append(g.dealer, g.shuffler.MustDraw())
@@ -118,17 +119,17 @@ func (g *game) cleanup() {
 	g.bets = nil
 }
 
-func (g *game) play(io IO) {
+func (g *game) play() {
 	// Cannot use a range expression, len(g.bets) may change during iteration.
 	for i := 0; i < len(g.bets); i++ {
 		b := g.bets[i]
 		done := false
 
 		for !done {
-			io.Hand(g.dealer, b.hand)
+			g.inout.Hand(g.dealer, b.hand)
 
 			if b.hand.IsBlackjack() {
-				g.blackjack(b, io)
+				g.blackjack(b)
 				break
 			}
 
@@ -137,7 +138,7 @@ func (g *game) play(io IO) {
 				break
 			}
 
-			switch g.nextAction(b, io) {
+			switch g.nextAction(b) {
 			case Hit:
 				b.hand = append(b.hand, g.shuffler.MustDraw())
 			case Stand:
@@ -152,14 +153,14 @@ func (g *game) play(io IO) {
 				rh := Hand{rc, g.shuffler.MustDraw()}
 				b.hand = lh
 				g.bets = append(g.bets, &bet{hand: rh, amount: b.amount})
-				io.SplitHand(lh, rh, b.amount)
+				g.inout.SplitHand(lh, rh, b.amount)
 			case Double:
 				amount := b.amount
 				g.fortune.Withdrawal(amount)
 				b.amount = b.amount.Add(amount)
 				b.doubled = true
 				b.hand = append(b.hand, g.shuffler.MustDraw())
-				io.DoubleHand(b.hand, amount)
+				g.inout.DoubleHand(b.hand, amount)
 				done = true
 			}
 		}
@@ -181,27 +182,27 @@ func (g *game) play(io IO) {
 
 		player, _ := b.hand.Points()
 		if player > 21 {
-			g.bust(b, io)
+			g.bust(b)
 
 		} else if player > dealer && dealer <= 21 || dealer > 21 {
-			g.win(b, io)
+			g.win(b)
 
 		} else if player == dealer {
 			if g.rules.DealerWinsTie() {
-				g.loss(b, io)
+				g.loss(b)
 			} else {
-				g.push(b, io)
+				g.push(b)
 			}
 
 		} else {
-			g.loss(b, io)
+			g.loss(b)
 		}
 	}
 }
 
-func (g *game) nextAction(b *bet, io IO) Action {
+func (g *game) nextAction(b *bet) Action {
 	actions := g.availableActions(b)
-	action := io.NextAction(actions)
+	action := g.inout.NextAction(actions)
 
 	if !validAction(action, actions...) {
 		panic(fmt.Sprintf("action %v is invalid, allowed: %v", action, actions))
@@ -248,7 +249,7 @@ func (g *game) dealerFinished() bool {
 	return total >= 17
 }
 
-func (g *game) blackjack(b *bet, io IO) {
+func (g *game) blackjack(b *bet) {
 	ratio := g.rules.BlackjackRatio()
 	num := decimal.New(ratio.Num().Int64(), 0)
 	denom := decimal.New(ratio.Denom().Int64(), 0)
@@ -261,26 +262,26 @@ func (g *game) blackjack(b *bet, io IO) {
 	amount := b.amount.Mul(num).Div(denom).Add(b.amount)
 
 	g.fortune.Deposit(amount)
-	io.Outcome(Blackjack, amount, g.dealer, b.hand)
+	g.inout.Outcome(Blackjack, amount, g.dealer, b.hand)
 }
 
-func (g *game) win(b *bet, io IO) {
+func (g *game) win(b *bet) {
 	amount := b.amount.Mul(decimal.New(2, 0))
 	g.fortune.Deposit(amount)
-	io.Outcome(Win, amount, g.dealer, b.hand)
+	g.inout.Outcome(Win, amount, g.dealer, b.hand)
 }
 
-func (g *game) push(b *bet, io IO) {
+func (g *game) push(b *bet) {
 	g.fortune.Deposit(b.amount)
-	io.Outcome(Push, b.amount, g.dealer, b.hand)
+	g.inout.Outcome(Push, b.amount, g.dealer, b.hand)
 }
 
-func (g *game) loss(b *bet, io IO) {
-	io.Outcome(Loss, b.amount, g.dealer, b.hand)
+func (g *game) loss(b *bet) {
+	g.inout.Outcome(Loss, b.amount, g.dealer, b.hand)
 }
 
-func (g *game) bust(b *bet, io IO) {
-	io.Outcome(Bust, b.amount, g.dealer, b.hand)
+func (g *game) bust(b *bet) {
+	g.inout.Outcome(Bust, b.amount, g.dealer, b.hand)
 }
 
 func (g *game) canSplit(b *bet) bool {
