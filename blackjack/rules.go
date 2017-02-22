@@ -42,7 +42,7 @@ type Rules interface {
 // Game rules in different casino's.
 var (
 	HollandCasino Rules = holland{}
-	London        Rules = london{}
+	TapTapBoom    Rules = tapTapBoom{}
 )
 
 type holland struct{}
@@ -60,17 +60,17 @@ func (holland) DealerWinsTie() bool             { return false }
 func (holland) PerfectPair() bool               { return true }
 func (holland) PerfectPairRatio() (m, s, p int) { return 6, 12, 25 }
 
-type london struct{}
+type tapTapBoom struct{}
 
-func (london) NumDecks() uint                  { return 6 }
-func (london) DealerHitSoft17() bool           { return true }
-func (london) Surrender() SurrenderRule        { return NoSurrender }
-func (london) CanSplit(h []Hand) bool          { return len(h) == 1 }
-func (london) Double() DoubleRule              { return DoubleAny }
-func (london) DoubleAfterSplit() bool          { return true }
-func (london) NoHoleCard() bool                { return false }
-func (london) OriginalBetsOnly() bool          { return false }
-func (london) BlackjackRatio() *big.Rat        { return big.NewRat(3, 2) }
-func (london) DealerWinsTie() bool             { return false }
-func (london) PerfectPair() bool               { return false }
-func (london) PerfectPairRatio() (m, s, p int) { return }
+func (tapTapBoom) NumDecks() uint                  { return 6 }
+func (tapTapBoom) DealerHitSoft17() bool           { return true }
+func (tapTapBoom) Surrender() SurrenderRule        { return NoSurrender }
+func (tapTapBoom) CanSplit(h []Hand) bool          { return len(h) == 1 }
+func (tapTapBoom) Double() DoubleRule              { return DoubleAny }
+func (tapTapBoom) DoubleAfterSplit() bool          { return true }
+func (tapTapBoom) NoHoleCard() bool                { return false }
+func (tapTapBoom) OriginalBetsOnly() bool          { return false }
+func (tapTapBoom) BlackjackRatio() *big.Rat        { return big.NewRat(3, 2) }
+func (tapTapBoom) DealerWinsTie() bool             { return false }
+func (tapTapBoom) PerfectPair() bool               { return false }
+func (tapTapBoom) PerfectPairRatio() (m, s, p int) { return }

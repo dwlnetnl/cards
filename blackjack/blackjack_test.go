@@ -307,7 +307,7 @@ func TestDealerLostGame(t *testing.T) {
 }
 
 func TestDealerBlackjackGame(t *testing.T) {
-	testPlay(t, 15, London, 10, 0, []event{
+	testPlay(t, 15, TapTapBoom, 10, 0, []event{
 		outcome{
 			outcome: DealerBlackjack,
 			amount:  decimal.New(10, 0),
