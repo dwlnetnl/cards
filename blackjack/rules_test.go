@@ -95,7 +95,7 @@ func TestDealerWinsTie(t *testing.T) {
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
 		outcome{
-			outcome: Loss,
+			outcome: Lost,
 			amount:  decimal.New(10, 0),
 			dealer:  Hand{card.Heart(card.King), card.Spade(card.Ace)},
 			player: Hand{

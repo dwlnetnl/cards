@@ -44,7 +44,7 @@ func TestLostGame(t *testing.T) {
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
 		outcome{
-			outcome: Loss,
+			outcome: Lost,
 			amount:  decimal.New(10, 0),
 			dealer: Hand{
 				card.Diamond(card.Six),
@@ -121,7 +121,7 @@ func TestDoubleOnFirstHandOnly(t *testing.T) {
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
 		outcome{
-			outcome: Loss,
+			outcome: Lost,
 			amount:  decimal.New(10, 0),
 			dealer:  Hand{card.Spade(card.Ten), card.Spade(card.Nine)},
 			player: Hand{
@@ -150,7 +150,7 @@ func TestPushedGame(t *testing.T) {
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
 		outcome{
-			outcome: Push,
+			outcome: Pushed,
 			amount:  decimal.New(10, 0),
 			dealer:  Hand{card.Heart(card.King), card.Spade(card.Ace)},
 			player: Hand{
@@ -212,7 +212,7 @@ func TestSplittedGame(t *testing.T) {
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
 		outcome{
-			outcome: Push,
+			outcome: Pushed,
 			amount:  decimal.New(10, 0),
 			dealer: Hand{
 				card.Spade(card.Six),
@@ -222,7 +222,7 @@ func TestSplittedGame(t *testing.T) {
 			player: Hand{card.Heart(card.Eight), card.Diamond(card.Ace)},
 		},
 		outcome{
-			outcome: Loss,
+			outcome: Lost,
 			amount:  decimal.New(10, 0),
 			dealer: Hand{
 				card.Spade(card.Six),
@@ -232,7 +232,7 @@ func TestSplittedGame(t *testing.T) {
 			player: Hand{card.Spade(card.Eight), card.Club(card.King)},
 		},
 		outcome{
-			outcome: Loss,
+			outcome: Lost,
 			amount:  decimal.New(10, 0),
 			dealer: Hand{
 				card.Spade(card.Six),
@@ -242,7 +242,7 @@ func TestSplittedGame(t *testing.T) {
 			player: Hand{card.Club(card.Eight), card.Club(card.Seven)},
 		},
 		outcome{
-			outcome: Loss,
+			outcome: Lost,
 			amount:  decimal.New(10, 0),
 			dealer: Hand{
 				card.Spade(card.Six),
@@ -270,7 +270,7 @@ func TestDoubledGame(t *testing.T) {
 			withdrawn: decimal.New(10, 0),
 		},
 		outcome{
-			outcome: Win,
+			outcome: Won,
 			amount:  decimal.New(40, 0),
 			dealer: Hand{
 				card.Club(card.Ten),
@@ -294,7 +294,7 @@ func TestDealerLostGame(t *testing.T) {
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
 		outcome{
-			outcome: Loss,
+			outcome: Lost,
 			amount:  decimal.New(10, 0),
 			dealer: Hand{
 				card.Spade(card.Two),

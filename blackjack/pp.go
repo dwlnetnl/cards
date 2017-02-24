@@ -13,6 +13,8 @@ const (
 	Perfect
 )
 
+//go:generate stringer -type=PerfectPair
+
 func (h Hand) perfectPair() PerfectPair {
 	if len(h) != 2 || h[0].Rank != h[1].Rank {
 		return NoPair

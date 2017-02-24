@@ -108,7 +108,7 @@ func (ui *testUI) DoubleHand(hand Hand, amount decimal.Decimal) {
 
 func (ui *testUI) Outcome(out Outcome, amount decimal.Decimal, dealer, player Hand) {
 	ui.check(outcome{out, amount, dealer, player})
-	if out == Win || out == Push || out == Blackjack {
+	if out == Won || out == Pushed || out == Blackjack {
 		ui.bal = ui.bal.Add(amount)
 	}
 	ui.end = true

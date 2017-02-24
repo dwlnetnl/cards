@@ -17,24 +17,29 @@ type Action int
 const (
 	Hit Action = iota
 	Stand
-	Surrender
 	Split
 	Double
+	Surrender
+	Continue
 )
+
+//go:generate stringer -type=Action
 
 // Outcome represents the outcome of a bet.
 type Outcome int
 
 // Available outcomes.
 const (
-	Win Outcome = iota
-	Loss
+	Won Outcome = iota
+	Lost
 	Bust
-	Push
+	Pushed
 	Surrendered
 	Blackjack
 	DealerBlackjack
 )
+
+//go:generate stringer -type=Outcome
 
 // IO defines the game engine input and output interface.
 type IO interface {
@@ -268,16 +273,16 @@ func (g *game) blackjack(b *bet) {
 func (g *game) win(b *bet) {
 	amount := b.amount.Mul(decimal.New(2, 0))
 	g.fortune.Deposit(amount)
-	g.inout.Outcome(Win, amount, g.dealer, b.hand)
+	g.inout.Outcome(Won, amount, g.dealer, b.hand)
 }
 
 func (g *game) push(b *bet) {
 	g.fortune.Deposit(b.amount)
-	g.inout.Outcome(Push, b.amount, g.dealer, b.hand)
+	g.inout.Outcome(Pushed, b.amount, g.dealer, b.hand)
 }
 
 func (g *game) loss(b *bet) {
-	g.inout.Outcome(Loss, b.amount, g.dealer, b.hand)
+	g.inout.Outcome(Lost, b.amount, g.dealer, b.hand)
 }
 
 func (g *game) bust(b *bet) {

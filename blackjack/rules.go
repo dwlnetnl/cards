@@ -12,6 +12,8 @@ const (
 	DoubleOnly10_11
 )
 
+//go:generate stringer -type=DoubleRule
+
 // SurrenderRule represents different surrender rule variants.
 type SurrenderRule int
 
@@ -21,6 +23,8 @@ const (
 	EarlySurrender
 	LateSurrender
 )
+
+//go:generate stringer -type=SurrenderRule
 
 // Rules represent the game rules and mechanics.
 type Rules interface {
