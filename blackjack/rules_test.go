@@ -110,12 +110,26 @@ func TestDealerWinsTie(t *testing.T) {
 	})
 }
 
-// func TestDealerHitSoft17(t *testing.T) {
-// 	rules := testRules{surrender: NoSurrender}
-// 	testPlay(t, seed, rules, 10, 0, []event{
-//
-// 	})
-// }
+func TestDealerHitSoft17(t *testing.T) {
+	rules := testRules{surrender: NoSurrender}
+	testPlay(t, 20, rules, 10, 0, []event{
+		hand{
+			dealer: Hand{card.Heart(card.Ten)},
+			player: Hand{card.Club(card.Three), card.Heart(card.Ace)},
+		},
+		nextAction{[]Action{Hit, Stand, Double}, Stand},
+		outcome{
+			outcome: Won,
+			amount:  decimal.New(20, 0),
+			dealer: Hand{
+				card.Heart(card.Ten),
+				card.Spade(card.Seven),
+				card.Club(card.King),
+			},
+			player: Hand{card.Club(card.Three), card.Heart(card.Ace)},
+		},
+	})
+}
 
 func TestEarlySurrendered(t *testing.T) {
 	rules := testRules{surrender: EarlySurrender}
