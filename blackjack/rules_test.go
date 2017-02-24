@@ -27,8 +27,13 @@ func (r testRules) PerfectPair() bool               { return false }
 func (r testRules) PerfectPairRatio() (m, s, p int) { return }
 
 func TestDoubleAfterSplit(t *testing.T) {
-	rules := testRules{surrender: NoSurrender}
+	rules := testRules{surrender: EarlySurrender}
 	testPlay(t, 38, rules, 10, 5, []event{
+		hand{
+			dealer: Hand{card.Diamond(card.Nine)},
+			player: Hand{card.Diamond(card.Ten), card.Diamond(card.Ten)},
+		},
+		nextAction{[]Action{Surrender, Continue}, Continue},
 		hand{
 			dealer: Hand{card.Diamond(card.Nine)},
 			player: Hand{card.Diamond(card.Ten), card.Diamond(card.Ten)},
@@ -55,24 +60,22 @@ func TestDoubleAfterSplit(t *testing.T) {
 			dealer: Hand{card.Diamond(card.Nine)},
 			player: Hand{card.Diamond(card.Ten), card.Spade(card.Ace)},
 		},
-		outcome{
-			outcome: Blackjack,
-			amount:  decimal.New(25, 0),
-			dealer:  Hand{card.Diamond(card.Nine)},
-			player:  Hand{card.Diamond(card.Ten), card.Spade(card.Ace)},
-		},
+		nextAction{[]Action{Hit, Stand, Double}, Stand},
 		outcome{
 			outcome: Bust,
 			amount:  decimal.New(20, 0),
-			dealer: Hand{
-				card.Diamond(card.Nine),
-				card.Diamond(card.Ten),
-			},
+			dealer:  Hand{card.Diamond(card.Nine), card.Diamond(card.Ten)},
 			player: Hand{
 				card.Diamond(card.Ten),
 				card.Spade(card.Four),
 				card.Diamond(card.Nine),
 			},
+		},
+		outcome{
+			outcome: Won,
+			amount:  decimal.New(20, 0),
+			dealer:  Hand{card.Diamond(card.Nine), card.Diamond(card.Ten)},
+			player:  Hand{card.Diamond(card.Ten), card.Spade(card.Ace)},
 		},
 	})
 }
@@ -103,6 +106,47 @@ func TestDealerWinsTie(t *testing.T) {
 				card.Club(card.Queen),
 				card.Heart(card.Eight),
 			},
+		},
+	})
+}
+
+// func TestDealerHitSoft17(t *testing.T) {
+// 	rules := testRules{surrender: NoSurrender}
+// 	testPlay(t, seed, rules, 10, 0, []event{
+//
+// 	})
+// }
+
+func TestEarlySurrendered(t *testing.T) {
+	rules := testRules{surrender: EarlySurrender}
+	testPlay(t, 5, rules, 10, 0, []event{
+		hand{
+			dealer: Hand{card.Spade(card.King)},
+			player: Hand{card.Diamond(card.Five), card.Diamond(card.Jack)},
+		},
+		nextAction{[]Action{Surrender, Continue}, Surrender},
+		outcome{
+			outcome: Surrendered,
+			amount:  decimal.New(5, 0),
+			dealer:  Hand{card.Spade(card.King)},
+			player:  Hand{card.Diamond(card.Five), card.Diamond(card.Jack)},
+		},
+	})
+}
+
+func TestLateSurrendered(t *testing.T) {
+	rules := testRules{surrender: LateSurrender}
+	testPlay(t, 164, rules, 10, 0, []event{
+		hand{
+			dealer: Hand{card.Diamond(card.Ten)},
+			player: Hand{card.Heart(card.Six), card.Club(card.Jack)},
+		},
+		nextAction{[]Action{Surrender, Continue}, Surrender},
+		outcome{
+			outcome: Surrendered,
+			amount:  decimal.New(5, 0),
+			dealer:  Hand{card.Diamond(card.Ten)},
+			player:  Hand{card.Heart(card.Six), card.Club(card.Jack)},
 		},
 	})
 }

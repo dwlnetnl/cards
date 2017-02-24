@@ -87,10 +87,15 @@ func Play(io IO, r Rules, f *player.Fortune) {
 				g.perfectPair()
 			}
 
+			b := g.bets[0]
 			if g.dealer.IsBlackjack() {
-				io.Outcome(DealerBlackjack, g.bets[0].amount, g.dealer, g.bets[0].hand)
+				io.Outcome(DealerBlackjack, b.amount, g.dealer, b.hand)
 			} else {
-				g.play()
+				if b.hand.IsBlackjack() {
+					g.blackjack()
+				} else {
+					g.play()
+				}
 			}
 
 			g.cleanup()
@@ -125,7 +130,21 @@ func (g *game) cleanup() {
 }
 
 func (g *game) play() {
-	// Cannot use a range expression, len(g.bets) may change during iteration.
+	if g.canEarlySurrender() {
+		b := g.bets[0]
+		g.inout.Hand(g.dealer, b.hand)
+		switch a := g.nextAction(b, []Action{Surrender, Continue}); a {
+		case Continue:
+		case Surrender:
+			g.surrender(b)
+			return
+		default:
+			panic(fmt.Sprintf("unexpected action: %v", a))
+		}
+	}
+
+	// Can't use a range expression because it evaluates the length
+	// of g.bets only once, g.bets may change during iteration.
 	for i := 0; i < len(g.bets); i++ {
 		b := g.bets[i]
 		done := false
@@ -133,23 +152,16 @@ func (g *game) play() {
 		for !done {
 			g.inout.Hand(g.dealer, b.hand)
 
-			if b.hand.IsBlackjack() {
-				g.blackjack(b)
-				break
-			}
-
 			total, soft := b.hand.Points()
 			if !soft && total >= 21 {
 				break
 			}
 
-			switch g.nextAction(b) {
+			switch a := g.nextAction(b, g.availableActions(b)); a {
 			case Hit:
 				b.hand = append(b.hand, g.shuffler.MustDraw())
 			case Stand:
 				done = true
-			case Surrender:
-				panic("not implemented")
 			case Split:
 				g.fortune.Withdrawal(b.amount)
 				lc := b.hand[0]
@@ -167,6 +179,12 @@ func (g *game) play() {
 				b.hand = append(b.hand, g.shuffler.MustDraw())
 				g.inout.DoubleHand(b.hand, amount)
 				done = true
+			case Surrender: // late surrender
+				g.surrender(b)
+				return
+			case Continue:
+			default:
+				panic(fmt.Sprintf("unexpected action: %v", a))
 			}
 		}
 	}
@@ -181,10 +199,6 @@ func (g *game) play() {
 
 	dealer, _ := g.dealer.Points()
 	for _, b := range g.bets {
-		if b.hand.IsBlackjack() {
-			continue
-		}
-
 		player, _ := b.hand.Points()
 		if player > 21 {
 			g.bust(b)
@@ -205,20 +219,12 @@ func (g *game) play() {
 	}
 }
 
-func (g *game) nextAction(b *bet) Action {
-	actions := g.availableActions(b)
-	action := g.inout.NextAction(actions)
-
-	if !validAction(action, actions...) {
-		panic(fmt.Sprintf("action %v is invalid, allowed: %v", action, actions))
+func (g *game) availableActions(b *bet) []Action {
+	if g.canLateSurrender(b) {
+		return []Action{Surrender, Continue}
 	}
 
-	return action
-}
-
-func (g *game) availableActions(b *bet) []Action {
 	actions := []Action{Hit, Stand}
-
 	if g.canSplit(b) {
 		actions = append(actions, Split)
 	}
@@ -227,11 +233,15 @@ func (g *game) availableActions(b *bet) []Action {
 		actions = append(actions, Double)
 	}
 
-	if g.rules.Surrender() != NoSurrender && !b.doubled && len(b.hand) == 2 {
-		actions = append(actions, Surrender)
-	}
-
 	return actions
+}
+
+func (g *game) nextAction(b *bet, actions []Action) Action {
+	action := g.inout.NextAction(actions)
+	if !validAction(action, actions...) {
+		panic(fmt.Sprintf("action %v is invalid, allowed: %v", action, actions))
+	}
+	return action
 }
 
 func validAction(action Action, actions ...Action) bool {
@@ -240,21 +250,20 @@ func validAction(action Action, actions ...Action) bool {
 			return true
 		}
 	}
-
 	return false
 }
 
 func (g *game) dealerFinished() bool {
 	total, soft := g.dealer.Points()
-
 	if total == 17 && soft {
 		return !g.rules.DealerHitSoft17()
 	}
-
 	return total >= 17
 }
 
-func (g *game) blackjack(b *bet) {
+func (g *game) blackjack() {
+	b := g.bets[0]
+
 	ratio := g.rules.BlackjackRatio()
 	num := decimal.New(ratio.Num().Int64(), 0)
 	denom := decimal.New(ratio.Denom().Int64(), 0)
@@ -289,12 +298,14 @@ func (g *game) bust(b *bet) {
 	g.inout.Outcome(Bust, b.amount, g.dealer, b.hand)
 }
 
-func (g *game) canSplit(b *bet) bool {
-	if len(b.hand) != 2 {
-		return false
-	}
+func (g *game) surrender(b *bet) {
+	amount := b.amount.Div(decimal.New(2, 0))
+	g.fortune.Deposit(amount)
+	g.inout.Outcome(Surrendered, amount, g.dealer, b.hand)
+}
 
-	if b.hand[0].Rank != b.hand[1].Rank {
+func (g *game) canSplit(b *bet) bool {
+	if len(b.hand) != 2 || b.hand[0].Rank != b.hand[1].Rank {
 		return false
 	}
 
@@ -311,11 +322,7 @@ func (g *game) canSplit(b *bet) bool {
 }
 
 func (g *game) canDouble(b *bet) bool {
-	if len(b.hand) > 2 {
-		return false
-	}
-
-	if !g.fortune.Has(b.amount) {
+	if len(b.hand) > 2 || !g.fortune.Has(b.amount) {
 		return false
 	}
 
@@ -331,4 +338,16 @@ func (g *game) canDouble(b *bet) bool {
 	}
 
 	return true
+}
+
+func (g *game) canEarlySurrender() bool {
+	if len(g.bets) != 1 {
+		panic("only first bet can be surrendered early")
+	}
+	return g.rules.Surrender() == EarlySurrender && len(g.dealer) == 1
+}
+
+func (g *game) canLateSurrender(b *bet) bool {
+	return g.rules.Surrender() == LateSurrender && len(g.dealer) == 1 &&
+		len(g.bets) == 1 && len(g.bets[0].hand) == 2 && !b.doubled
 }

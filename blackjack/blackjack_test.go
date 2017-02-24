@@ -14,10 +14,6 @@ func TestUnbettedGame(t *testing.T) {
 
 func TestBlackjackGame(t *testing.T) {
 	testPlay(t, 1, HollandCasino, 10, 0, []event{
-		hand{
-			dealer: Hand{card.Heart(card.Jack)},
-			player: Hand{card.Heart(card.Ace), card.Heart(card.Queen)},
-		},
 		outcome{
 			outcome: Blackjack,
 			amount:  decimal.New(25, 0),
