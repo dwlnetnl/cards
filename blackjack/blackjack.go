@@ -166,7 +166,7 @@ func (g *game) play() {
 		}
 	}
 
-	if g.rules.NoHoleCard() {
+	if g.rules.NoHoleCard() && len(g.dealer) == 1 {
 		g.dealer = append(g.dealer, g.shuffler.MustDraw())
 	}
 
