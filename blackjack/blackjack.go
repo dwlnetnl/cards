@@ -50,7 +50,7 @@ type UI interface {
 	SplitHand(left, right Hand, amount decimal.Decimal)
 	DoubleHand(hand Hand, withdrawn decimal.Decimal)
 	Outcome(outcome Outcome, amount decimal.Decimal, dealer, player Hand)
-	NewGame() bool
+	NewGame(fortune *player.Fortune) bool
 
 	PerfectPairBet(fortune *player.Fortune) (amount decimal.Decimal)
 	PerfectPair(kind PerfectPair, amount decimal.Decimal)
@@ -102,7 +102,7 @@ func Play(ui UI, r Rules, f *player.Fortune) {
 			g.cleanup()
 		}
 
-		if !ui.NewGame() {
+		if !ui.NewGame(f) {
 			return
 		}
 	}
@@ -333,7 +333,12 @@ func (g *game) canDouble(b *bet) bool {
 
 	if dr := g.rules.Double(); dr != DoubleAny {
 		pts, _ := b.hand.Points()
-		if !(pts == 11 || pts == 10 || pts == 9 && dr == DoubleOnly9_10_11) {
+
+		if dr == DoubleOnly9_10_11 && (pts < 9 || pts > 11) {
+			return false
+		}
+
+		if dr == DoubleOnly10_11 && (pts < 10 || pts > 11) {
 			return false
 		}
 	}

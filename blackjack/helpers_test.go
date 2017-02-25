@@ -118,7 +118,10 @@ func (ui *testUI) Outcome(out Outcome, amount decimal.Decimal, dealer, player Ha
 	ui.end = true
 }
 
-func (ui *testUI) NewGame() bool {
+func (ui *testUI) NewGame(fortune *player.Fortune) bool {
+	if fortune != ui.fort {
+		ui.test.Fatalf("got fortune %v, want: %v", fortune, ui.fort)
+	}
 	if len(ui.want) > 0 {
 		if !ui.end {
 			ui.test.Error("game had no outcome")
