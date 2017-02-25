@@ -21,6 +21,9 @@ func (h Hand) Names(sep string) string {
 }
 
 func (h Hand) String() string {
+	if h == nil {
+		return "<nil>"
+	}
 	points, _ := h.Points()
 	return fmt.Sprintf("%s (%d)", h.Names(", "), points)
 }

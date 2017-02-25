@@ -15,6 +15,18 @@ func TestMixedPerfectPairGame(t *testing.T) {
 			player: Hand{card.Heart(card.Two), card.Spade(card.Two)},
 		},
 		nextAction{[]Action{Hit, Stand, Split}, Stand},
+		dealerCard{
+			card: card.Spade(card.Queen),
+			hand: Hand{card.Diamond(card.Six), card.Spade(card.Queen)},
+		},
+		dealerCard{
+			card: card.Diamond(card.Eight),
+			hand: Hand{
+				card.Diamond(card.Six),
+				card.Spade(card.Queen),
+				card.Diamond(card.Eight),
+			},
+		},
 		outcome{
 			outcome: Won,
 			amount:  decimal.New(20, 0),
@@ -45,6 +57,10 @@ func TestSamePerfectPairGame(t *testing.T) {
 			},
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
+		dealerCard{
+			card: card.Spade(card.Eight),
+			hand: Hand{card.Heart(card.Ace), card.Spade(card.Eight)},
+		},
 		outcome{
 			outcome: Pushed,
 			amount:  decimal.New(10, 0),
@@ -66,6 +82,27 @@ func TestPerfectPerfectPairGame(t *testing.T) {
 			player: Hand{card.Diamond(card.Ten), card.Diamond(card.Ten)},
 		},
 		nextAction{[]Action{Hit, Stand, Split}, Stand},
+		dealerCard{
+			card: card.Spade(card.Four),
+			hand: Hand{card.Diamond(card.Nine), card.Spade(card.Four)},
+		},
+		dealerCard{
+			card: card.Spade(card.Ace),
+			hand: Hand{
+				card.Diamond(card.Nine),
+				card.Spade(card.Four),
+				card.Spade(card.Ace),
+			},
+		},
+		dealerCard{
+			card: card.Diamond(card.Nine),
+			hand: Hand{
+				card.Diamond(card.Nine),
+				card.Spade(card.Four),
+				card.Spade(card.Ace),
+				card.Diamond(card.Nine),
+			},
+		},
 		outcome{
 			outcome: Won,
 			amount:  decimal.New(20, 0),

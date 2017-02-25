@@ -84,6 +84,10 @@ func (ui *testUI) Hand(dealer, player Hand) {
 	ui.check(hand{dealer, player})
 }
 
+func (ui *testUI) DealerCard(card card.Card, hand Hand) {
+	ui.check(dealerCard{card, hand})
+}
+
 func (ui *testUI) NextAction(actions []Action) Action {
 	next := ui.nextAction()
 	ui.check(nextAction{actions: actions})
@@ -159,6 +163,23 @@ func (want hand) test(t *testing.T, num int, other event) {
 	}
 	if !reflect.DeepEqual(got.player, want.player) {
 		t.Errorf("#%d: got player hand %v, want: %v", num, got.player, want.player)
+		t.Fail()
+	}
+}
+
+type dealerCard struct {
+	card card.Card
+	hand Hand
+}
+
+func (want dealerCard) test(t *testing.T, num int, other event) {
+	got := other.(dealerCard)
+	if got.card != want.card {
+		t.Errorf("#%d: got card %v, want: %v", num, got.card, want.card)
+		t.Fail()
+	}
+	if !reflect.DeepEqual(got.hand, want.hand) {
+		t.Errorf("#%d: got hand %v, want: %v", num, got.hand, want.hand)
 		t.Fail()
 	}
 }

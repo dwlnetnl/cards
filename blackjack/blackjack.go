@@ -41,10 +41,11 @@ const (
 
 //go:generate stringer -type=Outcome
 
-// IO defines the game engine input and output interface.
-type IO interface {
+// UI defines the game engine interface for user interaction.
+type UI interface {
 	Bet(fortune *player.Fortune) (amount decimal.Decimal)
 	Hand(dealer, player Hand)
+	DealerCard(card card.Card, hand Hand)
 	NextAction(actions []Action) Action
 	SplitHand(left, right Hand, amount decimal.Decimal)
 	DoubleHand(hand Hand, withdrawn decimal.Decimal)
@@ -62,7 +63,7 @@ type bet struct {
 }
 
 type game struct {
-	inout    IO
+	ui       UI
 	rules    Rules
 	fortune  *player.Fortune
 	shuffler *card.Shuffler
@@ -72,13 +73,13 @@ type game struct {
 
 var newShuffler = card.NewShuffler // for testing
 
-// Play plays a blackjack game.
-func Play(io IO, r Rules, f *player.Fortune) {
+// Play starts a blackjack game.
+func Play(ui UI, r Rules, f *player.Fortune) {
 	s := newShuffler(card.NewStandardDeck(), r.NumDecks())
-	g := &game{inout: io, rules: r, fortune: f, shuffler: s}
+	g := &game{ui: ui, rules: r, fortune: f, shuffler: s}
 
 	for {
-		amount := io.Bet(g.fortune)
+		amount := ui.Bet(g.fortune)
 		if amount.Cmp(decimal.Zero) == 1 { // amount > 0
 			g.fortune.Withdrawal(amount)
 			g.setup(amount)
@@ -89,7 +90,7 @@ func Play(io IO, r Rules, f *player.Fortune) {
 
 			b := g.bets[0]
 			if g.dealer.IsBlackjack() {
-				io.Outcome(DealerBlackjack, b.amount, g.dealer, b.hand)
+				ui.Outcome(DealerBlackjack, b.amount, g.dealer, b.hand)
 			} else {
 				if b.hand.IsBlackjack() {
 					g.blackjack()
@@ -101,7 +102,7 @@ func Play(io IO, r Rules, f *player.Fortune) {
 			g.cleanup()
 		}
 
-		if !io.NewGame() {
+		if !ui.NewGame() {
 			return
 		}
 	}
@@ -132,7 +133,7 @@ func (g *game) cleanup() {
 func (g *game) play() {
 	if g.canEarlySurrender() {
 		b := g.bets[0]
-		g.inout.Hand(g.dealer, b.hand)
+		g.ui.Hand(g.dealer, b.hand)
 		switch a := g.nextAction(b, []Action{Surrender, Continue}); a {
 		case Continue:
 		case Surrender:
@@ -150,7 +151,7 @@ func (g *game) play() {
 		done := false
 
 		for !done {
-			g.inout.Hand(g.dealer, b.hand)
+			g.ui.Hand(g.dealer, b.hand)
 
 			total, soft := b.hand.Points()
 			if !soft && total >= 21 {
@@ -170,14 +171,14 @@ func (g *game) play() {
 				rh := Hand{rc, g.shuffler.MustDraw()}
 				b.hand = lh
 				g.bets = append(g.bets, &bet{hand: rh, amount: b.amount})
-				g.inout.SplitHand(lh, rh, b.amount)
+				g.ui.SplitHand(lh, rh, b.amount)
 			case Double:
 				amount := b.amount
 				g.fortune.Withdrawal(amount)
 				b.amount = b.amount.Add(amount)
 				b.doubled = true
 				b.hand = append(b.hand, g.shuffler.MustDraw())
-				g.inout.DoubleHand(b.hand, amount)
+				g.ui.DoubleHand(b.hand, amount)
 				done = true
 			case Surrender: // late surrender
 				g.surrender(b)
@@ -190,11 +191,15 @@ func (g *game) play() {
 	}
 
 	if g.rules.NoHoleCard() && len(g.dealer) == 1 {
-		g.dealer = append(g.dealer, g.shuffler.MustDraw())
+		c := g.shuffler.MustDraw()
+		g.dealer = append(g.dealer, c)
+		g.ui.DealerCard(c, g.dealer)
 	}
 
 	for !g.dealerFinished() {
-		g.dealer = append(g.dealer, g.shuffler.MustDraw())
+		c := g.shuffler.MustDraw()
+		g.dealer = append(g.dealer, c)
+		g.ui.DealerCard(c, g.dealer)
 	}
 
 	dealer, _ := g.dealer.Points()
@@ -237,7 +242,7 @@ func (g *game) availableActions(b *bet) []Action {
 }
 
 func (g *game) nextAction(b *bet, actions []Action) Action {
-	action := g.inout.NextAction(actions)
+	action := g.ui.NextAction(actions)
 	if !validAction(action, actions...) {
 		panic(fmt.Sprintf("action %v is invalid, allowed: %v", action, actions))
 	}
@@ -276,32 +281,32 @@ func (g *game) blackjack() {
 	amount := b.amount.Mul(num).Div(denom).Add(b.amount)
 
 	g.fortune.Deposit(amount)
-	g.inout.Outcome(Blackjack, amount, g.dealer, b.hand)
+	g.ui.Outcome(Blackjack, amount, g.dealer, b.hand)
 }
 
 func (g *game) win(b *bet) {
 	amount := b.amount.Mul(decimal.New(2, 0))
 	g.fortune.Deposit(amount)
-	g.inout.Outcome(Won, amount, g.dealer, b.hand)
+	g.ui.Outcome(Won, amount, g.dealer, b.hand)
 }
 
 func (g *game) push(b *bet) {
 	g.fortune.Deposit(b.amount)
-	g.inout.Outcome(Pushed, b.amount, g.dealer, b.hand)
+	g.ui.Outcome(Pushed, b.amount, g.dealer, b.hand)
 }
 
 func (g *game) loss(b *bet) {
-	g.inout.Outcome(Lost, b.amount, g.dealer, b.hand)
+	g.ui.Outcome(Lost, b.amount, g.dealer, b.hand)
 }
 
 func (g *game) bust(b *bet) {
-	g.inout.Outcome(Bust, b.amount, g.dealer, b.hand)
+	g.ui.Outcome(Bust, b.amount, g.dealer, b.hand)
 }
 
 func (g *game) surrender(b *bet) {
 	amount := b.amount.Div(decimal.New(2, 0))
 	g.fortune.Deposit(amount)
-	g.inout.Outcome(Surrendered, amount, g.dealer, b.hand)
+	g.ui.Outcome(Surrendered, amount, g.dealer, b.hand)
 }
 
 func (g *game) canSplit(b *bet) bool {

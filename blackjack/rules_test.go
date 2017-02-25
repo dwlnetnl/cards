@@ -61,6 +61,10 @@ func TestDoubleAfterSplit(t *testing.T) {
 			player: Hand{card.Diamond(card.Ten), card.Spade(card.Ace)},
 		},
 		nextAction{[]Action{Hit, Stand, Double}, Stand},
+		dealerCard{
+			card: card.Diamond(card.Ten),
+			hand: Hand{card.Diamond(card.Nine), card.Diamond(card.Ten)},
+		},
 		outcome{
 			outcome: Bust,
 			amount:  decimal.New(20, 0),
@@ -97,6 +101,10 @@ func TestDealerWinsTie(t *testing.T) {
 			},
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
+		dealerCard{
+			card: card.Spade(card.Ace),
+			hand: Hand{card.Heart(card.King), card.Spade(card.Ace)},
+		},
 		outcome{
 			outcome: Lost,
 			amount:  decimal.New(10, 0),
@@ -118,6 +126,18 @@ func TestDealerHitSoft17(t *testing.T) {
 			player: Hand{card.Club(card.Three), card.Heart(card.Ace)},
 		},
 		nextAction{[]Action{Hit, Stand, Double}, Stand},
+		dealerCard{
+			card: card.Spade(card.Seven),
+			hand: Hand{card.Heart(card.Ten), card.Spade(card.Seven)},
+		},
+		dealerCard{
+			card: card.Club(card.King),
+			hand: Hand{
+				card.Heart(card.Ten),
+				card.Spade(card.Seven),
+				card.Club(card.King),
+			},
+		},
 		outcome{
 			outcome: Won,
 			amount:  decimal.New(20, 0),

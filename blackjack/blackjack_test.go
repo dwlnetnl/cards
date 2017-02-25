@@ -39,6 +39,18 @@ func TestLostGame(t *testing.T) {
 			},
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
+		dealerCard{
+			card: card.Diamond(card.Eight),
+			hand: Hand{card.Diamond(card.Six), card.Diamond(card.Eight)},
+		},
+		dealerCard{
+			card: card.Club(card.Five),
+			hand: Hand{
+				card.Diamond(card.Six),
+				card.Diamond(card.Eight),
+				card.Club(card.Five),
+			},
+		},
 		outcome{
 			outcome: Lost,
 			amount:  decimal.New(10, 0),
@@ -81,6 +93,27 @@ func TestBustGame(t *testing.T) {
 				card.Diamond(card.Eight),
 			},
 		},
+		dealerCard{
+			card: card.Club(card.Five),
+			hand: Hand{card.Diamond(card.Six), card.Club(card.Five)},
+		},
+		dealerCard{
+			card: card.Heart(card.Two),
+			hand: Hand{
+				card.Diamond(card.Six),
+				card.Club(card.Five),
+				card.Heart(card.Two),
+			},
+		},
+		dealerCard{
+			card: card.Spade(card.Seven),
+			hand: Hand{
+				card.Diamond(card.Six),
+				card.Club(card.Five),
+				card.Heart(card.Two),
+				card.Spade(card.Seven),
+			},
+		},
 		outcome{
 			outcome: Bust,
 			amount:  decimal.New(10, 0),
@@ -116,6 +149,10 @@ func TestDoubleOnFirstHandOnly(t *testing.T) {
 			},
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
+		dealerCard{
+			card: card.Spade(card.Nine),
+			hand: Hand{card.Spade(card.Ten), card.Spade(card.Nine)},
+		},
 		outcome{
 			outcome: Lost,
 			amount:  decimal.New(10, 0),
@@ -145,6 +182,10 @@ func TestPushedGame(t *testing.T) {
 			},
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
+		dealerCard{
+			card: card.Spade(card.Ace),
+			hand: Hand{card.Heart(card.King), card.Spade(card.Ace)},
+		},
 		outcome{
 			outcome: Pushed,
 			amount:  decimal.New(10, 0),
@@ -207,6 +248,18 @@ func TestSplittedGame(t *testing.T) {
 			player: Hand{card.Diamond(card.Eight), card.Heart(card.Eight)},
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
+		dealerCard{
+			card: card.Club(card.Ten),
+			hand: Hand{card.Spade(card.Six), card.Club(card.Ten)},
+		},
+		dealerCard{
+			card: card.Heart(card.Three),
+			hand: Hand{
+				card.Spade(card.Six),
+				card.Club(card.Ten),
+				card.Heart(card.Three),
+			},
+		},
 		outcome{
 			outcome: Pushed,
 			amount:  decimal.New(10, 0),
@@ -265,6 +318,18 @@ func TestDoubledGame(t *testing.T) {
 			},
 			withdrawn: decimal.New(10, 0),
 		},
+		dealerCard{
+			card: card.Club(card.Five),
+			hand: Hand{card.Club(card.Ten), card.Club(card.Five)},
+		},
+		dealerCard{
+			card: card.Spade(card.Nine),
+			hand: Hand{
+				card.Club(card.Ten),
+				card.Club(card.Five),
+				card.Spade(card.Nine),
+			},
+		},
 		outcome{
 			outcome: Won,
 			amount:  decimal.New(40, 0),
@@ -289,6 +354,18 @@ func TestDealerLostGame(t *testing.T) {
 			player: Hand{card.Diamond(card.Two), card.Heart(card.King)},
 		},
 		nextAction{[]Action{Hit, Stand}, Stand},
+		dealerCard{
+			card: card.Diamond(card.Eight),
+			hand: Hand{card.Spade(card.Two), card.Diamond(card.Eight)},
+		},
+		dealerCard{
+			card: card.Spade(card.Queen),
+			hand: Hand{
+				card.Spade(card.Two),
+				card.Diamond(card.Eight),
+				card.Spade(card.Queen),
+			},
+		},
 		outcome{
 			outcome: Lost,
 			amount:  decimal.New(10, 0),
