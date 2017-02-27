@@ -88,7 +88,9 @@ func (ui *textUI) writeln() {
 	}
 }
 
-func (ui *textUI) getRune(msg string, choices []string, accept []rune) rune {
+const noDef = '\000'
+
+func (ui *textUI) getRune(msg string, choices []string, accept []rune, def rune) rune {
 	if len(choices) == 0 {
 		panic("no choices provided")
 	}
@@ -96,11 +98,15 @@ func (ui *textUI) getRune(msg string, choices []string, accept []rune) rune {
 		panic("no accept runes provided")
 	}
 
+	for i, r := range accept {
+		accept[i] = unicode.ToLower(r)
+	}
+
 	for {
 		ui.writef("%s %s: ", msg, strings.Join(choices, "/"))
 		r := ui.readRune()
-		for i, r := range accept {
-			accept[i] = unicode.ToLower(r)
+		if def != noDef && r == '\n' {
+			r = def
 		}
 
 		for _, ar := range accept {
@@ -111,10 +117,10 @@ func (ui *textUI) getRune(msg string, choices []string, accept []rune) rune {
 
 		buf := new(bytes.Buffer)
 		buf.WriteString("invalid input received (choices: ")
-		buf.WriteRune(accept[0])
+		buf.WriteRune(toUpperIfMatch(accept[0], def))
 		for i := 1; i < len(accept); i++ {
 			buf.WriteString(", ")
-			buf.WriteRune(accept[i])
+			buf.WriteRune(toUpperIfMatch(accept[i], def))
 		}
 		buf.WriteByte(')')
 		fmt.Fprintln(buf)
@@ -126,7 +132,14 @@ func (ui *textUI) getRune(msg string, choices []string, accept []rune) rune {
 	}
 }
 
-func (ui *textUI) getDecimal(msg string, prev decimal.Decimal) decimal.Decimal {
+func toUpperIfMatch(r, match rune) rune {
+	if r == match {
+		r = unicode.ToUpper(r)
+	}
+	return r
+}
+
+func (ui *textUI) getDecimal(msg string, prev decimal.Decimal, must bool) decimal.Decimal {
 	for {
 		zero := prev.Equal(decimal.Zero)
 		if zero {
@@ -137,6 +150,11 @@ func (ui *textUI) getDecimal(msg string, prev decimal.Decimal) decimal.Decimal {
 
 		s := ui.readString()
 		if s == "" {
+			if must && zero {
+				ui.write("no input received")
+				ui.writeln()
+				continue
+			}
 			if zero {
 				return decimal.Zero
 			}
@@ -162,8 +180,20 @@ func (ui *textUI) writeFortune(f *player.Fortune) {
 
 func (ui *textUI) Bet(f *player.Fortune) decimal.Decimal {
 	ui.writeFortune(f)
-	amount := ui.getDecimal("How much do you want to bet?", ui.bet)
-	ui.bet = amount
+
+	if f.Active().Cmp(ui.bet) == -1 { // f.Active <= ui.bet
+		ui.bet = decimal.Zero
+	}
+
+	amount := ui.getDecimal("How much do you want to bet?", ui.bet, true)
+
+	if f.Active().Cmp(amount) >= 0 && amount.Cmp(ui.bet) <= 0 ||
+		ui.bet.Equal(decimal.Zero) {
+
+		// f.Active() >= amount && amount <= ui.bet || ui.bet == 0
+		ui.bet = amount
+	}
+
 	return amount
 }
 
@@ -203,7 +233,7 @@ func (ui *textUI) NextAction(actions []blackjack.Action) blackjack.Action {
 		r[i] = actionRunes[a]
 	}
 
-	ar := ui.getRune("What is your next action?", s, r)
+	ar := ui.getRune("What is your next action?", s, r, noDef)
 	for a, r := range actionRunes {
 		if r == ar {
 			return a
@@ -228,15 +258,27 @@ func (ui *textUI) Outcome(o blackjack.Outcome, a decimal.Decimal, d, p blackjack
 	ui.writeln()
 }
 
-func (ui *textUI) NewGame() bool {
+func (ui *textUI) NewGame(f *player.Fortune) bool {
+	ui.writeFortune(f)
 	choices := []string{"[Y]es", "[N]o"}
 	runes := []rune{'y', 'n'}
-	r := ui.getRune("Do you want to play a new game?", choices, runes)
+	r := ui.getRune("Do you want to play a new game?", choices, runes, 'y')
 	return r == 'y'
 }
 
+func (ui *textUI) NoActiveFortune(f *player.Fortune) bool {
+	ui.writeFortune(f)
+	return false
+}
+
+func (ui *textUI) NoFortune() {
+	ui.write("No more fortune to bet with, sorry!")
+	ui.writeln()
+}
+
 func (ui *textUI) PerfectPairBet(f *player.Fortune) decimal.Decimal {
-	amount := ui.getDecimal("How much do you want to bet for Perfect Pair?", ui.pp)
+	const msg = "How much do you want to bet for Perfect Pair?"
+	amount := ui.getDecimal(msg, ui.pp, false)
 	ui.pp = amount
 	return amount
 }

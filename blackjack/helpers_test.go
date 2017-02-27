@@ -135,6 +135,14 @@ func (ui *testUI) NewGame(fortune *player.Fortune) bool {
 	return false
 }
 
+func (ui *testUI) NoActiveFortune(fortune *player.Fortune) bool {
+	return false
+}
+
+func (ui *testUI) NoFortune() {
+	ui.check(noFortune{})
+}
+
 func (ui *testUI) PerfectPairBet(fortune *player.Fortune) decimal.Decimal {
 	if fortune != ui.fort {
 		ui.test.Fatalf("got fortune %v, want: %v", fortune, ui.fort)
@@ -274,5 +282,14 @@ func (want perfectPair) test(t *testing.T, num int, other event) {
 	if !got.amount.Equal(want.amount) {
 		t.Errorf("#%d: got amount %v, want: %v", num, got.amount, want.amount)
 		t.Fail()
+	}
+}
+
+type noFortune struct{}
+
+func (want noFortune) test(t *testing.T, num int, other event) {
+	got := other.(noFortune)
+	if got != want {
+		t.Fatalf("#%d: got %v, want: %v", num, got, want)
 	}
 }

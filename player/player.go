@@ -29,7 +29,7 @@ func (f Fortune) Total() decimal.Decimal { return f.active.Add(f.saving) }
 
 // Has returns true if an amount can be taken from fortune f.
 func (f Fortune) Has(amount decimal.Decimal) bool {
-	return amount.Cmp(f.active) == -1 // d is less than f.active
+	return f.active.Cmp(amount) >= 0 // f.active >= amount
 }
 
 // Skim transfers an amount from active to savings.

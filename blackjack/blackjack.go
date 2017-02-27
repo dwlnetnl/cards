@@ -51,6 +51,8 @@ type UI interface {
 	DoubleHand(hand Hand, withdrawn decimal.Decimal)
 	Outcome(outcome Outcome, amount decimal.Decimal, dealer, player Hand)
 	NewGame(fortune *player.Fortune) bool
+	NoActiveFortune(fortune *player.Fortune) bool
+	NoFortune()
 
 	PerfectPairBet(fortune *player.Fortune) (amount decimal.Decimal)
 	PerfectPair(kind PerfectPair, amount decimal.Decimal)
@@ -79,33 +81,56 @@ func Play(ui UI, r Rules, f *player.Fortune) {
 	g := &game{ui: ui, rules: r, fortune: f, shuffler: s}
 
 	for {
-		amount := ui.Bet(g.fortune)
-		if amount.Cmp(decimal.Zero) == 1 { // amount > 0
-			g.fortune.Withdrawal(amount)
-			g.setup(amount)
-
-			if g.rules.PerfectPair() {
-				g.perfectPair()
-			}
-
-			b := g.bets[0]
-			if g.dealer.IsBlackjack() {
-				ui.Outcome(DealerBlackjack, b.amount, g.dealer, b.hand)
-			} else {
-				if b.hand.IsBlackjack() {
-					g.blackjack()
-				} else {
-					g.play()
-				}
-			}
-
-			g.cleanup()
+		amount := g.bet()
+		if amount.Equal(decimal.Zero) {
+			return
 		}
+
+		g.setup(amount)
+
+		if g.rules.PerfectPair() {
+			g.perfectPair()
+		}
+
+		b := g.bets[0]
+		if g.dealer.IsBlackjack() {
+			ui.Outcome(DealerBlackjack, b.amount, g.dealer, b.hand)
+		} else {
+			if b.hand.IsBlackjack() {
+				g.blackjack()
+			} else {
+				g.play()
+			}
+		}
+
+		g.cleanup()
 
 		if !ui.NewGame(f) {
 			return
 		}
 	}
+}
+
+func (g *game) bet() decimal.Decimal {
+	if g.fortune.Total().Equal(decimal.Zero) {
+		g.ui.NoFortune()
+		return decimal.Zero
+	}
+
+	amount := g.ui.Bet(g.fortune)
+	if amount.Cmp(decimal.Zero) <= 0 { // amount <= 0
+		if !g.ui.NewGame(g.fortune) {
+			return decimal.Zero
+		}
+		return g.bet()
+	}
+
+	if !g.fortune.Has(amount) {
+		return g.bet()
+	}
+
+	g.fortune.Withdrawal(amount)
+	return amount
 }
 
 func (g *game) setup(amount decimal.Decimal) {
