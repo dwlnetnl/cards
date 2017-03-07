@@ -53,7 +53,7 @@ func TestLostGame(t *testing.T) {
 		},
 		outcome{
 			outcome: Lost,
-			amount:  decimal.New(10, 0),
+			amount:  decimal.New(-10, 0),
 			dealer: Hand{
 				card.Diamond(card.Six),
 				card.Diamond(card.Eight),
@@ -116,7 +116,7 @@ func TestBustGame(t *testing.T) {
 		},
 		outcome{
 			outcome: Bust,
-			amount:  decimal.New(10, 0),
+			amount:  decimal.New(-10, 0),
 			dealer: Hand{
 				card.Diamond(card.Six),
 				card.Club(card.Five),
@@ -155,7 +155,7 @@ func TestDoubleOnFirstHandOnly(t *testing.T) {
 		},
 		outcome{
 			outcome: Lost,
-			amount:  decimal.New(10, 0),
+			amount:  decimal.New(-10, 0),
 			dealer:  Hand{card.Spade(card.Ten), card.Spade(card.Nine)},
 			player: Hand{
 				card.Club(card.Six),
@@ -181,7 +181,6 @@ func TestPushedGame(t *testing.T) {
 				card.Heart(card.Eight),
 			},
 		},
-		nextAction{[]Action{Hit, Stand}, Stand},
 		dealerCard{
 			card: card.Spade(card.Ace),
 			hand: Hand{card.Heart(card.King), card.Spade(card.Ace)},
@@ -247,7 +246,7 @@ func TestSplittedGame(t *testing.T) {
 			dealer: Hand{card.Spade(card.Six)},
 			player: Hand{card.Diamond(card.Eight), card.Heart(card.Eight)},
 		},
-		nextAction{[]Action{Hit, Stand}, Stand},
+		nextAction{[]Action{Hit, Stand, Split}, Stand},
 		dealerCard{
 			card: card.Club(card.Ten),
 			hand: Hand{card.Spade(card.Six), card.Club(card.Ten)},
@@ -272,7 +271,7 @@ func TestSplittedGame(t *testing.T) {
 		},
 		outcome{
 			outcome: Lost,
-			amount:  decimal.New(10, 0),
+			amount:  decimal.New(-10, 0),
 			dealer: Hand{
 				card.Spade(card.Six),
 				card.Club(card.Ten),
@@ -282,7 +281,7 @@ func TestSplittedGame(t *testing.T) {
 		},
 		outcome{
 			outcome: Lost,
-			amount:  decimal.New(10, 0),
+			amount:  decimal.New(-10, 0),
 			dealer: Hand{
 				card.Spade(card.Six),
 				card.Club(card.Ten),
@@ -292,7 +291,7 @@ func TestSplittedGame(t *testing.T) {
 		},
 		outcome{
 			outcome: Lost,
-			amount:  decimal.New(10, 0),
+			amount:  decimal.New(-10, 0),
 			dealer: Hand{
 				card.Spade(card.Six),
 				card.Club(card.Ten),
@@ -368,7 +367,7 @@ func TestDealerLostGame(t *testing.T) {
 		},
 		outcome{
 			outcome: Lost,
-			amount:  decimal.New(10, 0),
+			amount:  decimal.New(-10, 0),
 			dealer: Hand{
 				card.Spade(card.Two),
 				card.Diamond(card.Eight),

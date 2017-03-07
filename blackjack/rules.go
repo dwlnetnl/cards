@@ -66,7 +66,7 @@ func (holland) PerfectPairRatio() (m, s, p int) { return 6, 12, 25 }
 
 type tapTapBoom struct{}
 
-func (tapTapBoom) NumDecks() uint                  { return 6 }
+func (tapTapBoom) NumDecks() uint                  { return 6 } // guess
 func (tapTapBoom) DealerHitSoft17() bool           { return true }
 func (tapTapBoom) Surrender() SurrenderRule        { return NoSurrender }
 func (tapTapBoom) CanSplit(h []Hand) bool          { return len(h) == 1 }

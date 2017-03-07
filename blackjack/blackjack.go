@@ -183,7 +183,14 @@ func (g *game) play() {
 				break
 			}
 
-			switch a := g.nextAction(b, g.availableActions(b)); a {
+			var a Action
+			if total == 21 {
+				a = Stand
+			} else {
+				a = g.nextAction(b, g.availableActions(b))
+			}
+
+			switch a {
 			case Hit:
 				b.hand = append(b.hand, g.shuffler.MustDraw())
 			case Stand:
@@ -321,11 +328,13 @@ func (g *game) push(b *bet) {
 }
 
 func (g *game) loss(b *bet) {
-	g.ui.Outcome(Lost, b.amount, g.dealer, b.hand)
+	amount := decimal.Zero.Sub(b.amount)
+	g.ui.Outcome(Lost, amount, g.dealer, b.hand)
 }
 
 func (g *game) bust(b *bet) {
-	g.ui.Outcome(Bust, b.amount, g.dealer, b.hand)
+	amount := decimal.Zero.Sub(b.amount)
+	g.ui.Outcome(Bust, amount, g.dealer, b.hand)
 }
 
 func (g *game) surrender(b *bet) {

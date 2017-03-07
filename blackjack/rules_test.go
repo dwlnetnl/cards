@@ -60,14 +60,13 @@ func TestDoubleAfterSplit(t *testing.T) {
 			dealer: Hand{card.Diamond(card.Nine)},
 			player: Hand{card.Diamond(card.Ten), card.Spade(card.Ace)},
 		},
-		nextAction{[]Action{Hit, Stand, Double}, Stand},
 		dealerCard{
 			card: card.Diamond(card.Ten),
 			hand: Hand{card.Diamond(card.Nine), card.Diamond(card.Ten)},
 		},
 		outcome{
 			outcome: Bust,
-			amount:  decimal.New(20, 0),
+			amount:  decimal.New(-20, 0),
 			dealer:  Hand{card.Diamond(card.Nine), card.Diamond(card.Ten)},
 			player: Hand{
 				card.Diamond(card.Ten),
@@ -100,14 +99,13 @@ func TestDealerWinsTie(t *testing.T) {
 				card.Heart(card.Eight),
 			},
 		},
-		nextAction{[]Action{Hit, Stand}, Stand},
 		dealerCard{
 			card: card.Spade(card.Ace),
 			hand: Hand{card.Heart(card.King), card.Spade(card.Ace)},
 		},
 		outcome{
 			outcome: Lost,
-			amount:  decimal.New(10, 0),
+			amount:  decimal.New(-10, 0),
 			dealer:  Hand{card.Heart(card.King), card.Spade(card.Ace)},
 			player: Hand{
 				card.Heart(card.Three),
