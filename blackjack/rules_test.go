@@ -18,6 +18,7 @@ func (r testRules) Surrender() SurrenderRule        { return r.surrender }
 func (r testRules) CanSplit([]Hand) bool            { return true }
 func (r testRules) Double() DoubleRule              { return DoubleAny }
 func (r testRules) DoubleAfterSplit() bool          { return true }
+func (r testRules) BlackjackAfterSplit() bool       { return true }
 func (r testRules) NoHoleCard() bool                { return true }
 func (r testRules) OriginalBetsOnly() bool          { return false }
 func (r testRules) BlackjackRatio() decimal.Decimal { return decimal.New(15, -1) }
@@ -25,7 +26,7 @@ func (r testRules) DealerWinsTie() bool             { return true }
 func (r testRules) PerfectPair() bool               { return false }
 func (r testRules) PerfectPairRatio() (m, s, p int) { return }
 
-func TestDoubleAfterSplit(t *testing.T) {
+func TestDoubleBlackjackAfterSplit(t *testing.T) {
 	rules := testRules{surrender: EarlySurrender}
 	testPlay(t, 38, rules, 10, 5, []event{
 		hand{
@@ -55,10 +56,6 @@ func TestDoubleAfterSplit(t *testing.T) {
 			},
 			withdrawn: decimal.New(10, 0),
 		},
-		hand{
-			dealer: Hand{card.Diamond(card.Nine)},
-			player: Hand{card.Diamond(card.Ten), card.Spade(card.Ace)},
-		},
 		dealerCard{
 			card: card.Diamond(card.Ten),
 			hand: Hand{card.Diamond(card.Nine), card.Diamond(card.Ten)},
@@ -74,8 +71,8 @@ func TestDoubleAfterSplit(t *testing.T) {
 			},
 		},
 		outcome{
-			outcome: Won,
-			amount:  decimal.New(20, 0),
+			outcome: Blackjack,
+			amount:  decimal.New(25, 0),
 			dealer:  Hand{card.Diamond(card.Nine), card.Diamond(card.Ten)},
 			player:  Hand{card.Diamond(card.Ten), card.Spade(card.Ace)},
 		},

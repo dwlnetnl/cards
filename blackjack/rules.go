@@ -34,6 +34,7 @@ type Rules interface {
 	CanSplit([]Hand) bool
 	Double() DoubleRule
 	DoubleAfterSplit() bool
+	BlackjackAfterSplit() bool
 	NoHoleCard() bool
 	OriginalBetsOnly() bool
 	BlackjackRatio() decimal.Decimal
@@ -49,6 +50,12 @@ var (
 	TapTapBoom    Rules = tapTapBoom{}
 )
 
+// AvailableRules is a slice that hold all available game rules.
+var AvailableRules = []Rules{
+	HollandCasino,
+	TapTapBoom,
+}
+
 type holland struct{}
 
 func (holland) NumDecks() uint                  { return 6 }
@@ -57,6 +64,7 @@ func (holland) Surrender() SurrenderRule        { return NoSurrender }
 func (holland) CanSplit([]Hand) bool            { return true }
 func (holland) Double() DoubleRule              { return DoubleOnly9_10_11 }
 func (holland) DoubleAfterSplit() bool          { return true }
+func (holland) BlackjackAfterSplit() bool       { return true }
 func (holland) NoHoleCard() bool                { return true }
 func (holland) OriginalBetsOnly() bool          { return false }
 func (holland) BlackjackRatio() decimal.Decimal { return decimal.New(15, -1) }
@@ -72,6 +80,7 @@ func (tapTapBoom) Surrender() SurrenderRule        { return NoSurrender }
 func (tapTapBoom) CanSplit(h []Hand) bool          { return len(h) == 1 }
 func (tapTapBoom) Double() DoubleRule              { return DoubleAny }
 func (tapTapBoom) DoubleAfterSplit() bool          { return true }
+func (tapTapBoom) BlackjackAfterSplit() bool       { return true }
 func (tapTapBoom) NoHoleCard() bool                { return false }
 func (tapTapBoom) OriginalBetsOnly() bool          { return false }
 func (tapTapBoom) BlackjackRatio() decimal.Decimal { return decimal.New(15, -1) }

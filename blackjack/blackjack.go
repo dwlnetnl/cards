@@ -59,9 +59,10 @@ type UI interface {
 }
 
 type bet struct {
-	hand    Hand
-	amount  decimal.Decimal
-	doubled bool
+	hand      Hand
+	amount    decimal.Decimal
+	doubled   bool
+	blackjack bool
 }
 
 type game struct {
@@ -97,7 +98,7 @@ func Play(ui UI, r Rules, f *player.Fortune) {
 			ui.Outcome(DealerBlackjack, b.amount, g.dealer, b.hand)
 		} else {
 			if b.hand.IsBlackjack() {
-				g.blackjack()
+				g.blackjack(b)
 			} else {
 				g.play()
 			}
@@ -175,6 +176,11 @@ func (g *game) play() {
 		b := g.bets[i]
 		done := false
 
+		if len(g.bets) > 1 && g.rules.BlackjackAfterSplit() && b.hand.IsBlackjack() {
+			b.blackjack = true
+			continue
+		}
+
 		for !done {
 			g.ui.Hand(g.dealer, b.hand)
 
@@ -236,6 +242,11 @@ func (g *game) play() {
 
 	dealer, _ := g.dealer.Points()
 	for _, b := range g.bets {
+		if b.blackjack {
+			g.blackjack(b)
+			continue
+		}
+
 		player, _ := b.hand.Points()
 		if player > 21 {
 			g.bust(b)
@@ -298,8 +309,7 @@ func (g *game) dealerFinished() bool {
 	return total >= 17
 }
 
-func (g *game) blackjack() {
-	b := g.bets[0]
+func (g *game) blackjack(b *bet) {
 	amount := b.amount.Mul(g.rules.BlackjackRatio()).Add(b.amount)
 	g.fortune.Deposit(amount)
 	g.ui.Outcome(Blackjack, amount, g.dealer, b.hand)
