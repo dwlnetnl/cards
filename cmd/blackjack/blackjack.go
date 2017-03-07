@@ -18,9 +18,9 @@ import (
 )
 
 func main() {
-	fmt.Println("Welcome to blackjack!")
-
 	ui := &textUI{r: bufio.NewReader(os.Stdin), w: os.Stdout, err: handleError}
+	ui.writeln("Welcome to blackjack!")
+
 	f := player.NewFortune(decimal.New(50, 0))
 	blackjack.Play(ui, blackjack.HollandCasino, f)
 }
@@ -67,8 +67,8 @@ func (ui *textUI) readRune() rune {
 	}
 }
 
-func (ui *textUI) write(s string) {
-	_, err := fmt.Fprint(ui.w, s)
+func (ui *textUI) write(args ...interface{}) {
+	_, err := fmt.Fprint(ui.w, args...)
 	if err != nil {
 		ui.err(err)
 	}
@@ -81,8 +81,8 @@ func (ui *textUI) writef(format string, args ...interface{}) {
 	}
 }
 
-func (ui *textUI) writeln() {
-	_, err := fmt.Fprintln(ui.w)
+func (ui *textUI) writeln(args ...interface{}) {
+	_, err := fmt.Fprintln(ui.w, args...)
 	if err != nil {
 		ui.err(err)
 	}
@@ -151,8 +151,7 @@ func (ui *textUI) getDecimal(msg string, prev decimal.Decimal, must bool) decima
 		s := ui.readString()
 		if s == "" {
 			if must && zero {
-				ui.write("no input received")
-				ui.writeln()
+				ui.writeln("no input received")
 				continue
 			}
 			if zero {
@@ -163,8 +162,7 @@ func (ui *textUI) getDecimal(msg string, prev decimal.Decimal, must bool) decima
 
 		d, err := decimal.NewFromString(s)
 		if err != nil {
-			ui.writef("error: %v", err)
-			ui.writeln()
+			ui.writeln("error:", err)
 			continue
 		}
 
@@ -174,8 +172,7 @@ func (ui *textUI) getDecimal(msg string, prev decimal.Decimal, must bool) decima
 
 func (ui *textUI) writeFortune(f *player.Fortune) {
 	ui.writeln()
-	ui.writef("Active: %v\tSavings: %v\tStake: %v", f.Active(), f.Savings(), f.Stake())
-	ui.writeln()
+	ui.writef("Active: %v\tSavings: %v\tStake: %v\n", f.Active(), f.Savings(), f.Stake())
 }
 
 func (ui *textUI) Bet(f *player.Fortune) decimal.Decimal {
@@ -198,13 +195,16 @@ func (ui *textUI) Bet(f *player.Fortune) decimal.Decimal {
 }
 
 func (ui *textUI) Hand(d, p blackjack.Hand) {
-	ui.writef("d=%v p=%v", d, p)
 	ui.writeln()
+	ui.writeln("Dealer:", d)
+	ui.writeln("Player:", p)
 }
 
 func (ui *textUI) DealerCard(c card.Card, h blackjack.Hand) {
-	ui.writef("c=%v h=%v", c, h)
-	ui.writeln()
+	if len(h) == 2 {
+		ui.writeln()
+	}
+	ui.writeln("Dealer:", h)
 }
 
 var actionRunes = map[blackjack.Action]rune{
@@ -244,18 +244,23 @@ func (ui *textUI) NextAction(actions []blackjack.Action) blackjack.Action {
 }
 
 func (ui *textUI) SplitHand(lh, rh blackjack.Hand, a decimal.Decimal) {
-	ui.writef("lh=%v rh=%v a=%v", lh, rh, a)
 	ui.writeln()
+	ui.writeln("Hand splitted:")
+	ui.writeln("first: ", lh)
+	ui.writeln("second:", rh)
 }
 
 func (ui *textUI) DoubleHand(h blackjack.Hand, a decimal.Decimal) {
-	ui.writef("h=%v a=%v", h, a)
 	ui.writeln()
+	ui.writeln("Hand doubled:", h)
 }
 
 func (ui *textUI) Outcome(o blackjack.Outcome, a decimal.Decimal, d, p blackjack.Hand) {
-	ui.writef("o=%v a=%v d=%v p=%v", o, a, d, p)
 	ui.writeln()
+	ui.writeln("Outcome:", o)
+	ui.writeln("Dealer: ", d)
+	ui.writeln("Player: ", p)
+	ui.writeln("Amount: ", a)
 }
 
 func (ui *textUI) NewGame(f *player.Fortune) bool {
@@ -272,8 +277,7 @@ func (ui *textUI) NoActiveFortune(f *player.Fortune) bool {
 }
 
 func (ui *textUI) NoFortune() {
-	ui.write("No more fortune to bet with, sorry!")
-	ui.writeln()
+	ui.writeln("No more fortune to bet with, sorry!")
 }
 
 func (ui *textUI) PerfectPairBet(f *player.Fortune) decimal.Decimal {

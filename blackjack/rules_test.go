@@ -1,7 +1,6 @@
 package blackjack
 
 import (
-	"math/big"
 	"testing"
 
 	"github.com/dwlnetnl/cards/card"
@@ -21,7 +20,7 @@ func (r testRules) Double() DoubleRule              { return DoubleAny }
 func (r testRules) DoubleAfterSplit() bool          { return true }
 func (r testRules) NoHoleCard() bool                { return true }
 func (r testRules) OriginalBetsOnly() bool          { return false }
-func (r testRules) BlackjackRatio() *big.Rat        { return big.NewRat(3, 2) }
+func (r testRules) BlackjackRatio() decimal.Decimal { return decimal.New(15, -1) }
 func (r testRules) DealerWinsTie() bool             { return true }
 func (r testRules) PerfectPair() bool               { return false }
 func (r testRules) PerfectPairRatio() (m, s, p int) { return }

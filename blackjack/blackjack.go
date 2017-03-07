@@ -300,18 +300,7 @@ func (g *game) dealerFinished() bool {
 
 func (g *game) blackjack() {
 	b := g.bets[0]
-
-	ratio := g.rules.BlackjackRatio()
-	num := decimal.New(ratio.Num().Int64(), 0)
-	denom := decimal.New(ratio.Denom().Int64(), 0)
-
-	// e.g. ratio is 3/2 and wager is 10
-	// amount = 10 * 3 / 2 + 10
-	//        = 30 / 2 + 10
-	//        = 15 + 10
-	//        = 25
-	amount := b.amount.Mul(num).Div(denom).Add(b.amount)
-
+	amount := b.amount.Mul(g.rules.BlackjackRatio()).Add(b.amount)
 	g.fortune.Deposit(amount)
 	g.ui.Outcome(Blackjack, amount, g.dealer, b.hand)
 }

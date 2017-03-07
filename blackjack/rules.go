@@ -1,6 +1,6 @@
 package blackjack
 
-import "math/big"
+import "github.com/shopspring/decimal"
 
 // DoubleRule represents different double rule variants.
 type DoubleRule int
@@ -36,7 +36,7 @@ type Rules interface {
 	DoubleAfterSplit() bool
 	NoHoleCard() bool
 	OriginalBetsOnly() bool
-	BlackjackRatio() *big.Rat
+	BlackjackRatio() decimal.Decimal
 	DealerWinsTie() bool
 
 	PerfectPair() bool
@@ -59,7 +59,7 @@ func (holland) Double() DoubleRule              { return DoubleOnly9_10_11 }
 func (holland) DoubleAfterSplit() bool          { return true }
 func (holland) NoHoleCard() bool                { return true }
 func (holland) OriginalBetsOnly() bool          { return false }
-func (holland) BlackjackRatio() *big.Rat        { return big.NewRat(3, 2) }
+func (holland) BlackjackRatio() decimal.Decimal { return decimal.New(15, -1) }
 func (holland) DealerWinsTie() bool             { return false }
 func (holland) PerfectPair() bool               { return true }
 func (holland) PerfectPairRatio() (m, s, p int) { return 6, 12, 25 }
@@ -74,7 +74,7 @@ func (tapTapBoom) Double() DoubleRule              { return DoubleAny }
 func (tapTapBoom) DoubleAfterSplit() bool          { return true }
 func (tapTapBoom) NoHoleCard() bool                { return false }
 func (tapTapBoom) OriginalBetsOnly() bool          { return false }
-func (tapTapBoom) BlackjackRatio() *big.Rat        { return big.NewRat(3, 2) }
+func (tapTapBoom) BlackjackRatio() decimal.Decimal { return decimal.New(15, -1) }
 func (tapTapBoom) DealerWinsTie() bool             { return false }
 func (tapTapBoom) PerfectPair() bool               { return false }
 func (tapTapBoom) PerfectPairRatio() (m, s, p int) { return }
