@@ -53,17 +53,13 @@ func (ui *textUI) readRune() rune {
 	}
 
 	for {
-		switch utf8.RuneCountInString(s) {
-		default:
-			ui.write("invalid input received")
-			ui.writeln()
-		case 0:
-			ui.write("no user input received")
-			ui.writeln()
-		case 1:
+		if utf8.RuneCountInString(s) > 0 {
 			r, _ := utf8.DecodeRuneInString(s)
 			return unicode.ToLower(r)
 		}
+
+		ui.write("no user input received")
+		ui.writeln()
 	}
 }
 
@@ -287,7 +283,9 @@ func (ui *textUI) PerfectPairBet(f *player.Fortune) decimal.Decimal {
 	return amount
 }
 
-func (ui *textUI) PerfectPair(pp blackjack.PerfectPair, a decimal.Decimal) {
-	ui.writef("pp=%v a=%v", pp, a)
+func (ui *textUI) PerfectPair(kind blackjack.PerfectPair, a decimal.Decimal) {
 	ui.writeln()
+	ui.writeln("Perfect Pair")
+	ui.writeln("Kind:  ", kind)
+	ui.writeln("Amount:", a)
 }

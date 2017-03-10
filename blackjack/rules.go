@@ -28,8 +28,8 @@ const (
 
 // Rules represent the game rules and mechanics.
 type Rules interface {
-	DealerHitSoft17() bool
 	NumDecks() uint
+	DealerHitSoft17() bool
 	Surrender() SurrenderRule
 	CanSplit([]Hand) bool
 	Double() DoubleRule

@@ -30,7 +30,7 @@ func (h Hand) perfectPair() PerfectPair {
 
 func (g *game) perfectPair() {
 	amount := g.ui.PerfectPairBet(g.fortune)
-	if amount.Equal(decimal.Zero) {
+	if amount.Equal(decimal.Zero) || !g.fortune.Has(amount) {
 		return
 	}
 
