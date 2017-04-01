@@ -180,10 +180,10 @@ func (ui *textUI) Bet(f *player.Fortune) decimal.Decimal {
 
 	amount := ui.getDecimal("How much do you want to bet?", ui.bet, true)
 
-	if f.Active().Cmp(amount) >= 0 && amount.Cmp(ui.bet) <= 0 ||
+	if f.Active().Cmp(amount) >= 0 && ui.bet.Cmp(amount) <= 0 ||
 		ui.bet.Equal(decimal.Zero) {
 
-		// f.Active() >= amount && amount <= ui.bet || ui.bet == 0
+		// f.Active() >= amount && ui.bet <= amount || ui.bet == 0
 		ui.bet = amount
 	}
 
